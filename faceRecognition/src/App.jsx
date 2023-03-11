@@ -4,7 +4,22 @@ import * as faceapi from '../node_modules/face-api.js'
 import './App.css'
 
 function loadLabledImages() {
-  const lables = ['Maayan', 'Neta', 'Noam']
+  const labels = ['Maayan', 'Neta', 'Noam'];
+  return Promise.all(
+    labels.map(async label => {
+      const descriptions = []
+      for (let i = 1; i <= 3; ++i)
+      {
+        const img = await faceapi.fetchImage('../labeledImages/' + label +'/' + label + i + '.jpeg')
+        const detections = await faceapi.detectSingleFace(img)
+        .withFaceLandmarks()
+        .withFaceDescriptor()
+        descriptions.push(detections.descriptor)
+      }
+
+      return new faceapi.LabeledFaceDescriptors(label, descriptions);
+    })
+  )
 }
 
 function App() {
@@ -13,6 +28,10 @@ function App() {
   const canvasRef = useRef();
   
   const handleImage = async () =>{
+
+    const labeledFaceDescriptors = await loadLabledImages();
+    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
+    
     const detections = await faceapi.detectAllFaces(imgRef.current  )
     .withFaceLandmarks()
     .withFaceDescriptors();
@@ -28,14 +47,12 @@ function App() {
       height: 650,
     })
     
-    resizedDetections.forEach(detection => {
-      const box = detection.detection.box;
-      const drawBox = new faceapi.draw.DrawBox(box, {label: 'Face'});
+    const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
+    results.forEach((result, i) => {
+      const box = resizedDetections[i].detection.box;
+      const drawBox = new faceapi.draw.DrawBox(box, {label: result.toString()});
       drawBox.draw(canvasRef.current);
     });
-    //faceapi.draw.drawDetections(canvasRef.current, resizedDetections);
-    // faceapi.draw.drawFaceLandmarks(canvasRef.current, resized);
-
   }
   
   
