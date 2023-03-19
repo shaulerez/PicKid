@@ -2,6 +2,12 @@
   display: flex;
 }
 
+.mainPage{
+  display: flex;
+  position: relative;
+}
+
 canvas{
   position: absolute;
 }
+
