@@ -23,9 +23,13 @@ function MainPage() {
     file && getImage();
   },[file])
   
+  const HandleGoBack = () =>{
+    setImage(null)
+  }
+
   return (
     <div>
-      {image ? <LoadNewPhoto image={image}/> :
+      {image ? <LoadNewPhoto image={image} handleGoBack={HandleGoBack}/> :
       <div className='mainPage'>
         <div className="appHeader">Pickey</div>
         <div className='loadPhoto '>

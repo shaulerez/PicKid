@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import testImage from '../../TestImage/TestNettaInTheKindergarden.jpeg'
 import * as faceapi from 'face-api.js'
 import '../App.css'
+import MainPage from './MainPage'
 
 function loadLabledImages() {
   const labels = ['Maayan', 'Neta', 'Noam'];
@@ -22,15 +23,13 @@ function loadLabledImages() {
   )
 }
 
-function LoadNewPhoto({image}) {
+function LoadNewPhoto(props) {
+  let image = props.image
   let updatedWidth = image.width;
   let updatedHeight = image.height;
-
-  while (updatedWidth > 1000)
-  {
-    updatedWidth /= 2;
-    updatedHeight /= 2;
-  }
+  let scaleFactor = updatedWidth > updatedHeight ? updatedWidth / 1000 : updatedHeight / 800;
+  updatedWidth /= scaleFactor;
+  updatedHeight /= scaleFactor;  
    
   const [count, setCount] = useState(0)
   const imgRef = useRef();
@@ -64,8 +63,10 @@ function LoadNewPhoto({image}) {
     });
   }
   
+  const HandelGoBackClick = () =>{
+    props.handleGoBack()
+  }
   
-  console.log(faceapi.nets)
   useEffect(()=>{
     const loadModels = () =>{
       Promise.all([
@@ -80,18 +81,24 @@ function LoadNewPhoto({image}) {
     imgRef.current && loadModels()
   },[])
   return (
-    <div className="loadNewPhoto">
-      <img 
-        crossOrigin="anonymous"
-        ref={imgRef}
-        src={image.url}  
-        alt=""
-        width={updatedWidth}
-        height={updatedHeight} 
-      />
-      <canvas ref={canvasRef} width={updatedWidth} height={updatedHeight}/>
-  
+    <div>
+      <div className="loadNewPhoto">
+        <img 
+          crossOrigin="anonymous"
+          ref={imgRef}
+          src={image.url}  
+          alt=""
+          width={updatedWidth}
+          height={updatedHeight} 
+        />
+        <canvas ref={canvasRef} width={updatedWidth} height={updatedHeight}/>
+      </div>
+      <div className='backToMainPage'>
+        <button style={{height: "50px", alignSelf: "center"}} onClick={HandelGoBackClick}>Back To Main Page</button>
+      </div>
     </div>
+    
+
   )
 }
 
