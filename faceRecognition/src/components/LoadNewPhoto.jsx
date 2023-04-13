@@ -4,24 +4,24 @@ import * as faceapi from 'face-api.js'
 import '../App.css'
 import MainPage from './MainPage'
 
-function loadLabledImages() {
-  const labels = ['Maayan', 'Neta', 'Noam'];
-  return Promise.all(
-    labels.map(async label => {
-      const descriptions = []
-      for (let i = 1; i <= 3; ++i)
-      {
-        const img = await faceapi.fetchImage('../../labeledImages/' + label +'/' + label + i + '.jpeg')
-        const detections = await faceapi.detectSingleFace(img)
-        .withFaceLandmarks()
-        .withFaceDescriptor()
-        descriptions.push(detections.descriptor)
-      }
+// function loadLabledImages() {
+//   const labels = ['Maayan', 'Neta', 'Noam'];
+//   return Promise.all(
+//     labels.map(async label => {
+//       const descriptions = []
+//       for (let i = 1; i <= 3; ++i)
+//       {
+//         const img = await faceapi.fetchImage('../../labeledImages/' + label +'/' + label + i + '.jpeg')
+//         const detections = await faceapi.detectSingleFace(img)
+//         .withFaceLandmarks()
+//         .withFaceDescriptor()
+//         descriptions.push(detections.descriptor)
+//       }
 
-      return new faceapi.LabeledFaceDescriptors(label, descriptions);
-    })
-  )
-}
+//       return new faceapi.LabeledFaceDescriptors(label, descriptions);
+//     })
+//   )
+// }
 
 function LoadNewPhoto(props) {
   let image = props.image
@@ -37,13 +37,24 @@ function LoadNewPhoto(props) {
   
   const handleImage = async () =>{
 
-    const labeledFaceDescriptors = await loadLabledImages();
+    const labeledFaceDescriptors = props.labeledFaceDescriptors;
     const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
     
-    const detections = await faceapi.detectAllFaces(imgRef.current  )
+    // Wait for the image to load before continue
+    await new Promise(resolve => {
+      const img = imgRef.current;
+      if (img.complete) {
+        resolve();
+      } else {
+      
+        img.onload = resolve;
+      }
+    });
+    
+    const detections = await faceapi.detectAllFaces(imgRef.current)
     .withFaceLandmarks()
     .withFaceDescriptors();
-  
+
     canvasRef.current.innerHtml = faceapi.createCanvasFromMedia(imgRef.current);
     faceapi.matchDimensions(canvasRef.current, {
       width: updatedWidth,
@@ -62,24 +73,26 @@ function LoadNewPhoto(props) {
       drawBox.draw(canvasRef.current);
     });
   }
+
+  imgRef.current && handleImage( )
   
   const HandelGoBackClick = () =>{
     props.handleGoBack()
   }
   
-  useEffect(()=>{
-    const loadModels = () =>{
-      Promise.all([
-        faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
-        faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
-        faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
-      ])
-      .then(handleImage)
-      .catch((e)=> console.log(e))
-    };
+  // useEffect(()=>{
+  //   const loadModels = () =>{
+  //     Promise.all([
+  //       faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+  //       faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+  //       faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+  //     ])
+  //     .then(handleImage)
+  //     .catch((e)=> console.log(e))
+  //   };
     
-    imgRef.current && loadModels()
-  },[])
+  //   imgRef.current && loadModels()
+  // },[])
   return (
     <div>
       <div className="loadNewPhoto">
